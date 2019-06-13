@@ -8,7 +8,7 @@
 
 #define LOAD_FACTOR (0.75)
 // BKDR Hash Function
-static unsigned int BKDRHash(const char* str) {
+static size_t BKDRHash(const char* str) {
     unsigned int seed = 131;
     unsigned int hash = 0;
 
@@ -19,7 +19,10 @@ static unsigned int BKDRHash(const char* str) {
     return (hash & 0x7FFFFFFF);
 }
 
-static int hashmap_get_available_index(hashmap_t map, const char* key) {
+static ssize_t hashmap_get_available_index(hashmap_t map, const char* key) {
+    if (map->current_size >= map->max_size * LOAD_FACTOR) {
+        return HASHMAP_FULL;
+    }
     unsigned int index = BKDRHash(key) % map->max_size;
     hashmap_element_t element = NULL;
     for (size_t i = 0; i < MAX_CHAIN_LENGTH; i++) {
@@ -65,7 +68,7 @@ err:
     return NULL;
 }
 
-static int hashmap_rehash(hashmap_t* map) {
+static ssize_t hashmap_rehash(hashmap_t* map) {
     unsigned int new_max_size = 2 * (*map)->max_size;
     hashmap_t new_map = hashmap_new_with_size(new_max_size);
     if (!new_map) {
@@ -103,7 +106,7 @@ void hashmap_free(hashmap_t map) {
     free(map);
 }
 
-int hashmap_put(hashmap_t map, char* key, char* value) {
+ssize_t hashmap_put(hashmap_t map, char* key, char* value) {
     int index = hashmap_get_available_index(map, key);
     int status = HASHMAP_OK;
     while (index == HASHMAP_FULL) {
@@ -120,7 +123,7 @@ int hashmap_put(hashmap_t map, char* key, char* value) {
 
     return HASHMAP_OK;
 }
-int hashmap_get(hashmap_t map, char* key, char** value) {
+ssize_t hashmap_get(hashmap_t map, char* key, char** value) {
     unsigned int index = BKDRHash(key) % map->max_size;
     hashmap_element_t element = NULL;
     for (size_t i = 0; i < MAX_CHAIN_LENGTH; i++) {
@@ -135,7 +138,7 @@ int hashmap_get(hashmap_t map, char* key, char** value) {
 
     return HASHMAP_NO_SUCH_ELEMENT;
 }
-int hashmap_remove(hashmap_t map, char* key) {
+ssize_t hashmap_remove(hashmap_t map, char* key) {
     unsigned int index = BKDRHash(key) % map->max_size;
     hashmap_element_t element = NULL;
     for (size_t i = 0; i < MAX_CHAIN_LENGTH; i++) {
@@ -149,13 +152,13 @@ int hashmap_remove(hashmap_t map, char* key) {
     }
     return HASHMAP_NO_SUCH_ELEMENT;
 }
-int hashmap_get_size(hashmap_t map) {
+size_t hashmap_get_size(hashmap_t map) {
     if (map) {
         return map->current_size;
     }
     return 0;
 }
-int hashmap_iterate(hashmap_t map, IterateCallback iterateCallback) {
+ssize_t hashmap_iterate(hashmap_t map, IterateCallback iterateCallback) {
     hashmap_element_t element = NULL;
     int status = HASHMAP_OK;
     for (size_t i = 0; i < map->max_size; i++) {
