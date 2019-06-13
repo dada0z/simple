@@ -10,7 +10,6 @@ typedef struct hashmap_element {
     char* key;
     char* value;
     int in_use;
-    struct hashmap_element* next;
 } hashmap_element;
 typedef hashmap_element* hashmap_element_t;
 
