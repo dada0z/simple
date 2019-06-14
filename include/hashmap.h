@@ -1,12 +1,10 @@
 #ifndef __HASHMAP_H__
 #define __HASHMAP_H__
+#ifdef __cplusplus
+extern "C" {
+#endif  //__cplusplus
 
-#if defined(_MSC_VER)
-#include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
-#else
 #include <sys/types.h>
-#endif
 
 #define HASHMAP_OK (0)
 #define HASHMAP_NO_SUCH_ELEMENT (-1)
@@ -37,4 +35,7 @@ extern ssize_t hashmap_remove(hashmap_t map, char* key);
 extern size_t hashmap_get_size(hashmap_t map);
 extern ssize_t hashmap_iterate(hashmap_t map, IterateCallback iterateCallback);
 
+#ifdef __cplusplus
+}
+#endif  //__cplusplus
 #endif  //__HASHMAP_H__

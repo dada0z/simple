@@ -3,12 +3,11 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif//__cplusplus
+#endif  //__cplusplus
 
 const char* get_file_mime_type(const char* extension);
 
-
 #ifdef __cplusplus
 }
-#endif//__cplusplus
-#endif//_MIME_H_
+#endif  //__cplusplus
+#endif  //_MIME_H_
