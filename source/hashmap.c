@@ -27,11 +27,11 @@ static ssize_t hashmap_get_available_index(hashmap_t map, const char* key) {
     hashmap_element_t element = NULL;
     for (size_t i = 0; i < MAX_CHAIN_LENGTH; i++) {
         element = &map->data[index];
-        if (element->in_use == 0) {
+        if (!element->in_use) {
             return index;
         }
 
-        if ((element->in_use == 1) && strcmp(element->key, key) == 0) {
+        if (element->in_use && strcmp(element->key, key) == 0) {
             return index;
         }
         index = (index + 1) % map->max_size;
@@ -49,7 +49,7 @@ static void hashmap_clear_element(hashmap_element_t element) {
         free(element->value);
     }
 
-    element->in_use = 0;
+    element->in_use = false;
 }
 
 static hashmap_t hashmap_new_with_size(unsigned int max_size) {
@@ -78,7 +78,7 @@ static ssize_t hashmap_rehash(hashmap_t* map) {
     hashmap_element_t element = NULL;
     for (size_t i = 0; i < (*map)->max_size; i++) {
         element = &(*map)->data[i];
-        if (element->in_use == 1) {
+        if (element->in_use) {
             int status = hashmap_put(new_map, element->key, element->value);
             if (status != HASHMAP_OK) {
                 hashmap_free(new_map);
@@ -116,7 +116,11 @@ ssize_t hashmap_put(hashmap_t map, char* key, char* value) {
         index = hashmap_get_available_index(map, key);
     }
 
-    map->data[index].in_use = 1;
+    if (map->data[index].in_use) {
+        hashmap_clear_element(&map->data[index]);
+        map->current_size--;
+    }
+    map->data[index].in_use = true;
     map->data[index].key = strdup(key);
     map->data[index].value = strdup(value);
     map->current_size++;
@@ -128,7 +132,7 @@ ssize_t hashmap_get(hashmap_t map, char* key, char** value) {
     hashmap_element_t element = NULL;
     for (size_t i = 0; i < MAX_CHAIN_LENGTH; i++) {
         element = &map->data[index];
-        if (element->in_use == 1 && strcmp(element->key, key) == 0) {
+        if (element->in_use && strcmp(element->key, key) == 0) {
             *value = map->data[i].value;
             return HASHMAP_OK;
         }
@@ -143,7 +147,7 @@ ssize_t hashmap_remove(hashmap_t map, char* key) {
     hashmap_element_t element = NULL;
     for (size_t i = 0; i < MAX_CHAIN_LENGTH; i++) {
         element = &map->data[index];
-        if (element->in_use == 1 && strcmp(element->key, key) == 0) {
+        if (element->in_use && strcmp(element->key, key) == 0) {
             hashmap_clear_element(element);
             return HASHMAP_OK;
         }
@@ -163,7 +167,7 @@ ssize_t hashmap_iterate(hashmap_t map, IterateCallback iterateCallback) {
     int status = HASHMAP_OK;
     for (size_t i = 0; i < map->max_size; i++) {
         element = &map->data[i];
-        if (element->in_use == 1) {
+        if (element->in_use) {
             status = iterateCallback(element);
             if (status != HASHMAP_OK) {
                 return status;

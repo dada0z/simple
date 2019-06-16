@@ -5,6 +5,7 @@ extern "C" {
 #endif  //__cplusplus
 
 #include <sys/types.h>
+#include <stdbool.h>
 
 #define HASHMAP_OK (0)
 #define HASHMAP_NO_SUCH_ELEMENT (-1)
@@ -14,7 +15,7 @@ extern "C" {
 typedef struct hashmap_element {
     char* key;
     char* value;
-    size_t in_use;
+    bool in_use;
 } hashmap_element;
 typedef hashmap_element* hashmap_element_t;
 
