@@ -17,7 +17,8 @@ $(TARGET):$(OBJS)
 $(OBJ_PATH)/%.o:$(SOURCE_PATH)/%.c
 	if [ ! -d $(OBJ_PATH) ]; then mkdir -p $(OBJ_PATH); fi;\
 	$(CC) $(CFLAGS) -I$(INCLUDE_PATH) -c $< -o $@
-
+test:
+	gcc -I$(INCLUDE_PATH) $(SOURCE_PATH)/hashmap.c $(SOURCE_PATH)/mime.c $(wildcard tests/*.c) -o AllTests
 .PHONY:clean
 
 clean:

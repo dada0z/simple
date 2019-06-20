@@ -64,7 +64,7 @@ static hashmap_t hashmap_new_with_size(unsigned int max_size) {
 
     return map;
 err:
-    if (map) hashmap_free(map);
+    if (map) hashmap_free(&map);
     return NULL;
 }
 
@@ -81,13 +81,13 @@ static ssize_t hashmap_rehash(hashmap_t* map) {
         if (element->in_use) {
             int status = hashmap_put(new_map, element->key, element->value);
             if (status != HASHMAP_OK) {
-                hashmap_free(new_map);
+                hashmap_free(&new_map);
                 return status;
             }
         }
     }
 
-    hashmap_free(*map);
+    hashmap_free(map);
     *map = new_map;
 
     return HASHMAP_OK;
@@ -95,15 +95,16 @@ static ssize_t hashmap_rehash(hashmap_t* map) {
 
 hashmap_t hashmap_new() { return hashmap_new_with_size(DEFAULT_MAX_SIZE); }
 
-void hashmap_free(hashmap_t map) {
+void hashmap_free(hashmap_t *map) {
     hashmap_element_t element = NULL;
-    for (size_t i = 0; i < map->max_size; i++) {
-        element = &map->data[i];
+    for (size_t i = 0; i < (*map)->max_size; i++) {
+        element = &(*map)->data[i];
         hashmap_clear_element(element);
     }
 
-    free(map->data);
-    free(map);
+    free((*map)->data);
+    free(*map);
+    *map = NULL;
 }
 
 ssize_t hashmap_put(hashmap_t map, char* key, char* value) {
