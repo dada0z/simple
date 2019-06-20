@@ -95,7 +95,7 @@ static ssize_t hashmap_rehash(hashmap_t* map) {
 
 hashmap_t hashmap_new() { return hashmap_new_with_size(DEFAULT_MAX_SIZE); }
 
-void hashmap_free(hashmap_t *map) {
+void hashmap_free(hashmap_t* map) {
     hashmap_element_t element = NULL;
     for (size_t i = 0; i < (*map)->max_size; i++) {
         element = &(*map)->data[i];
@@ -150,6 +150,7 @@ ssize_t hashmap_remove(hashmap_t map, char* key) {
         element = &map->data[index];
         if (element->in_use && strcmp(element->key, key) == 0) {
             hashmap_clear_element(element);
+            map->current_size--;
             return HASHMAP_OK;
         }
 
