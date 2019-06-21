@@ -2,6 +2,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+typedef struct hashmap_element {
+    char* key;
+    char* value;
+    bool in_use;
+} hashmap_element;
+typedef hashmap_element* hashmap_element_t;
+
+typedef struct hashmap {
+    size_t max_size;
+    size_t current_size;
+    hashmap_element_t data;
+} hashmap;
+
+typedef hashmap* hashmap_t;
+
 #define DEFAULT_MAX_SIZE (256)
 #define MAX_CHAIN_LENGTH (8)
 #define HASHMAP_FULL (-1)
@@ -103,17 +119,17 @@ static ssize_t hashmap_rehash(hashmap_t map) {
     return HASHMAP_OK;
 }
 
-hashmap_t hashmap_new() { return hashmap_new_with_size(DEFAULT_MAX_SIZE); }
+void* hashmap_new() { return (void*)hashmap_new_with_size(DEFAULT_MAX_SIZE); }
 
-void hashmap_free(hashmap_t map) {
-    hashmap_element_t element = NULL;
+void hashmap_free(void* in) {
+    hashmap_t map = (hashmap_t)in;
     hashmap_free_data(map->data, map->max_size);
-
     free(map->data);
     free(map);
 }
 
-ssize_t hashmap_put(hashmap_t map, char* key, char* value) {
+ssize_t hashmap_put(void* in, char* key, char* value) {
+    hashmap_t map = (hashmap_t)in;
     int index = hashmap_get_available_index(map, key);
     int status = HASHMAP_OK;
     while (index == HASHMAP_FULL) {
@@ -135,13 +151,14 @@ ssize_t hashmap_put(hashmap_t map, char* key, char* value) {
 
     return HASHMAP_OK;
 }
-ssize_t hashmap_get(hashmap_t map, char* key, char** value) {
+ssize_t hashmap_get(void* in, char* key, char** value) {
+    hashmap_t map = (hashmap_t)in;
     unsigned int index = BKDRHash(key) % map->max_size;
     hashmap_element_t element = NULL;
     for (size_t i = 0; i < MAX_CHAIN_LENGTH; i++) {
         element = &map->data[index];
         if (element->in_use && strcmp(element->key, key) == 0) {
-            *value = map->data[i].value;
+            *value = element->value;
             return HASHMAP_OK;
         }
 
@@ -150,7 +167,8 @@ ssize_t hashmap_get(hashmap_t map, char* key, char** value) {
 
     return HASHMAP_NO_SUCH_ELEMENT;
 }
-ssize_t hashmap_remove(hashmap_t map, char* key) {
+ssize_t hashmap_remove(void* in, char* key) {
+    hashmap_t map = (hashmap_t)in;
     unsigned int index = BKDRHash(key) % map->max_size;
     hashmap_element_t element = NULL;
     for (size_t i = 0; i < MAX_CHAIN_LENGTH; i++) {
@@ -165,19 +183,21 @@ ssize_t hashmap_remove(hashmap_t map, char* key) {
     }
     return HASHMAP_NO_SUCH_ELEMENT;
 }
-size_t hashmap_get_size(hashmap_t map) {
+size_t hashmap_get_size(void* in) {
+    hashmap_t map = (hashmap_t)in;
     if (map) {
         return map->current_size;
     }
     return 0;
 }
-ssize_t hashmap_iterate(hashmap_t map, IterateCallback iterateCallback) {
+ssize_t hashmap_iterate(void* in, IterateCallback iterateCallback) {
+    hashmap_t map = (hashmap_t)in;
     hashmap_element_t element = NULL;
     int status = HASHMAP_OK;
     for (size_t i = 0; i < map->max_size; i++) {
         element = &map->data[i];
         if (element->in_use) {
-            status = iterateCallback(element);
+            status = iterateCallback(element->key, element->value);
             if (status != HASHMAP_OK) {
                 return status;
             }
