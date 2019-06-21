@@ -1,5 +1,5 @@
-#include "CuTest.h"
 #include <stdio.h>
+#include "CuTest.h"
 CuSuite* hashmapGetSuite();
 CuSuite* mimeGetSuite();
 
@@ -14,6 +14,7 @@ void RunAllTests(void) {
     CuSuiteSummary(suite, output);
     CuSuiteDetails(suite, output);
     printf("%s\n", output->buffer);
+    CuSuiteDelete(suite);
 }
 
 int main(void) {
