@@ -10,20 +10,18 @@ void TestHashmapNew(CuTest* tc) {
     CuAssertIntEquals(tc, 256, map->max_size);
 }
 
-void TestHashmapFree(CuTest* tc) {
-    hashmap_free(&map);
-    CuAssertPtrEquals(tc, NULL, map);
-}
-
 void TestHashmapPut(CuTest* tc) {
     char key[20] = {0};
     char value[20] = {0};
     ssize_t error = 0;
-    snprintf(key, 20, "key%d", 20);
-    snprintf(value, 20, "value%d", 20);
-    error = hashmap_put(map, key, value);
-    CuAssertIntEquals(tc, HASHMAP_OK, error);
-    CuAssertIntEquals(tc, 1, map->current_size);
+    for (size_t i = 0; i < 100; i++) {
+        snprintf(key, 20, "key%lu", i);
+        snprintf(value, 20, "value%lu", i);
+        error = hashmap_put(map, key, value);
+        CuAssertIntEquals(tc, HASHMAP_OK, error);
+    }
+
+    CuAssertIntEquals(tc, 100, map->current_size);
 }
 
 void TestHashmapRemove(CuTest* tc) {
@@ -34,13 +32,13 @@ void TestHashmapRemove(CuTest* tc) {
     snprintf(value, 20, "value%d", 20);
     error = hashmap_remove(map, key);
     CuAssertIntEquals(tc, HASHMAP_OK, error);
-    CuAssertIntEquals(tc, 0, map->current_size);
+    CuAssertIntEquals(tc, 99, map->current_size);
+    hashmap_free(map);
 }
 CuSuite* hashmapGetSuite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, TestHashmapNew);
     SUITE_ADD_TEST(suite, TestHashmapPut);
     SUITE_ADD_TEST(suite, TestHashmapRemove);
-    SUITE_ADD_TEST(suite, TestHashmapFree);
     return suite;
 }

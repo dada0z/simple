@@ -29,7 +29,7 @@ typedef hashmap* hashmap_t;
 typedef ssize_t (*IterateCallback)(const hashmap_element_t element);
 
 extern hashmap_t hashmap_new();
-extern void hashmap_free(hashmap_t *map);
+extern void hashmap_free(hashmap_t map);
 extern ssize_t hashmap_put(hashmap_t map, char* key, char* value);
 extern ssize_t hashmap_get(hashmap_t map, char* key, char** value);
 extern ssize_t hashmap_remove(hashmap_t map, char* key);
