@@ -12,16 +12,16 @@ extern "C" {
 #define HASHMAP_MALLOC_FAIL (-2)
 #define HASHMAP_EMPTY (-3)
 
-
+typedef struct hashmap* hashmap_t;
 typedef ssize_t (*IterateCallback)(const char *key, const char *value);
 
-extern void* hashmap_new();
-extern void hashmap_free(void* in);
-extern ssize_t hashmap_put(void* in, char* key, char* value);
-extern ssize_t hashmap_get(void* in, char* key, char** value);
-extern ssize_t hashmap_remove(void* in, char* key);
-extern size_t hashmap_get_size(void* in);
-extern ssize_t hashmap_iterate(void* in, IterateCallback iterateCallback);
+extern hashmap_t hashmap_new();
+extern void hashmap_free(hashmap_t map);
+extern ssize_t hashmap_put(hashmap_t map, char* key, char* value);
+extern ssize_t hashmap_get(hashmap_t map, char* key, char** value);
+extern ssize_t hashmap_remove(hashmap_t map, char* key);
+extern size_t hashmap_get_size(hashmap_t map);
+extern ssize_t hashmap_iterate(hashmap_t map, IterateCallback iterateCallback);
 
 #ifdef __cplusplus
 }

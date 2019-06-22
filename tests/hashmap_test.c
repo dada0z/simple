@@ -4,7 +4,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include "CuTest.h"
-static void* map = NULL;
+static hashmap_t map = NULL;
 void TestHashmapPut(CuTest* tc) {
     map = hashmap_new();
     char key[20] = {0};
