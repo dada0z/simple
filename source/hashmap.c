@@ -108,7 +108,7 @@ static ssize_t hashmap_rehash(hashmap_t map) {
     for (size_t i = 0; i < old_max_size; i++) {
         element = &old_data[i];
         if (element->in_use) {
-            int status = hashmap_put(map, element->key, element->value);
+            ssize_t status = hashmap_put(map, element->key, element->value);
             if (status != HASHMAP_OK) {
                 hashmap_free_data(old_data, old_max_size);
                 return status;
@@ -130,8 +130,8 @@ void hashmap_free(void* in) {
 
 ssize_t hashmap_put(void* in, char* key, char* value) {
     hashmap_t map = (hashmap_t)in;
-    int index = hashmap_get_available_index(map, key);
-    int status = HASHMAP_OK;
+    ssize_t index = hashmap_get_available_index(map, key);
+    ssize_t status = HASHMAP_OK;
     while (index == HASHMAP_FULL) {
         if ((status = hashmap_rehash(map)) != HASHMAP_OK) {
             return status;
@@ -193,7 +193,7 @@ size_t hashmap_get_size(void* in) {
 ssize_t hashmap_iterate(void* in, IterateCallback iterateCallback) {
     hashmap_t map = (hashmap_t)in;
     hashmap_element_t element = NULL;
-    int status = HASHMAP_OK;
+    ssize_t status = HASHMAP_OK;
     for (size_t i = 0; i < map->max_size; i++) {
         element = &map->data[i];
         if (element->in_use) {

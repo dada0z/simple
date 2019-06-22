@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
 #include "CuTest.h"
 static void* map = NULL;
 void TestHashmapPut(CuTest* tc) {
@@ -29,6 +30,16 @@ void TestHashmapGet(CuTest* tc) {
     CuAssertStrEquals(tc, "value20", value);
 }
 
+ssize_t iterateCallback(const char* key, const char* value) {
+    printf("key:%s,value:%s\n", key, value);
+    return HASHMAP_OK;
+}
+void TestHashmapIterate(CuTest* tc) {
+    ssize_t error = 0;
+    error = hashmap_iterate(map, iterateCallback);
+    CuAssertIntEquals(tc, HASHMAP_OK, error);
+}
+
 void TestHashmapRemove(CuTest* tc) {
     char key[20] = {0};
     char value[20] = {0};
@@ -44,6 +55,7 @@ CuSuite* hashmapGetSuite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, TestHashmapPut);
     SUITE_ADD_TEST(suite, TestHashmapGet);
+    SUITE_ADD_TEST(suite, TestHashmapIterate);
     SUITE_ADD_TEST(suite, TestHashmapRemove);
     return suite;
 }
