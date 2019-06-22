@@ -4,8 +4,8 @@
 extern "C" {
 #endif  //__cplusplus
 
-#include <sys/types.h>
 #include <stdbool.h>
+#include <sys/types.h>
 
 #define HASHMAP_OK (0)
 #define HASHMAP_NO_SUCH_ELEMENT (-1)
@@ -13,7 +13,7 @@ extern "C" {
 #define HASHMAP_EMPTY (-3)
 
 typedef struct hashmap* hashmap_t;
-typedef ssize_t (*IterateCallback)(const char *key, const char *value);
+typedef ssize_t (*IterateCallback)(const char* key, const char* value);
 
 extern hashmap_t hashmap_new();
 extern void hashmap_free(hashmap_t map);

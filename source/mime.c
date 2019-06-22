@@ -2,8 +2,8 @@
 #include <stddef.h>
 #include <string.h>
 typedef struct {
-    const char* extension;
-    const char* mime_type;
+  const char* extension;
+  const char* mime_type;
 } mime_type_t;
 mime_type_t mimeMap[] = {{".html", "text/html"},
                          {".xml", "text/xml"},
@@ -25,14 +25,14 @@ mime_type_t mimeMap[] = {{".html", "text/html"},
                          {".json", "application/json"},
                          {".svg", "image/svg+xml"}};
 const char* get_file_mime_type(const char* extension) {
-    if (extension == NULL) {
-        return "application/octet-stream";
-    }
-    int i;
-    size_t len = sizeof(mimeMap) / sizeof(mimeMap[0]);
-    for (i = 0; i < len; ++i) {
-        if (strcmp(extension, mimeMap[i].extension) == 0)
-            return mimeMap[i].mime_type;
-    }
+  if (extension == NULL) {
     return "application/octet-stream";
+  }
+  int i;
+  size_t len = sizeof(mimeMap) / sizeof(mimeMap[0]);
+  for (i = 0; i < len; ++i) {
+    if (strcmp(extension, mimeMap[i].extension) == 0)
+      return mimeMap[i].mime_type;
+  }
+  return "application/octet-stream";
 }
