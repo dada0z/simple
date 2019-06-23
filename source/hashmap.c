@@ -113,7 +113,7 @@ static ssize_t hashmap_rehash(hashmap_t map) {
       }
     }
   }
-
+  hashmap_free_data(old_data, old_max_size);
   return HASHMAP_OK;
 }
 
