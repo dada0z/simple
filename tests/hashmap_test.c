@@ -13,7 +13,7 @@ void TestHashmapPut(CuTest* tc) {
   for (size_t i = 0; i < 100; i++) {
     snprintf(key, 20, "key%lu", i);
     snprintf(value, 20, "value%lu", i);
-    error = hashmap_put(&map, key, value);
+    error = hashmap_put(map, key, value);
     CuAssertIntEquals(tc, HASHMAP_OK, error);
   }
 

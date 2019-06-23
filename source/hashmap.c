@@ -88,29 +88,35 @@ err:
   return NULL;
 }
 
-static ssize_t hashmap_rehash(hashmap_t* map) {
-  size_t new_max_size = 2 * (*map)->max_size;
-  hashmap_t new_map = hashmap_new_with_size(new_max_size);
-  if (!new_map) {
+static ssize_t hashmap_rehash(hashmap_t map) {
+  size_t new_max_size = 2 * map->max_size;
+  hashmap_element_t new_data =
+      (hashmap_element_t)malloc(new_max_size * sizeof(hashmap_element));
+  if (!new_data) {
     return HASHMAP_MALLOC_FAIL;
   }
 
+  size_t old_max_size = map->max_size;
+  map->max_size = new_max_size;
+  hashmap_element_t old_data = map->data;
+  map->data = new_data;
+  map->current_size = 0;
+
   hashmap_element_t element = NULL;
-  for (size_t i = 0; i < (*map)->max_size; i++) {
-    element = &((*map)->data[i]);
+  for (size_t i = 0; i < old_max_size; i++) {
+    element = &old_data[i];
     if (element->in_use) {
-      ssize_t status = hashmap_put(&new_map, element->key, element->value);
+      ssize_t status = hashmap_put(map, element->key, element->value);
       if (status != HASHMAP_OK) {
-        hashmap_free(new_map);
+        hashmap_free_data(old_data, old_max_size);
         return status;
       }
     }
   }
-  hashmap_free((*map));
-  *map = new_map;
 
   return HASHMAP_OK;
 }
+
 hashmap_t hashmap_new() { return hashmap_new_with_size(DEFAULT_MAX_SIZE); }
 
 void hashmap_free(hashmap_t map) {
@@ -119,25 +125,25 @@ void hashmap_free(hashmap_t map) {
   free(map);
 }
 
-ssize_t hashmap_put(hashmap_t* map, char* key, char* value) {
-  ssize_t index = hashmap_get_available_index(*map, key);
+ssize_t hashmap_put(hashmap_t map, char* key, char* value) {
+  ssize_t index = hashmap_get_available_index(map, key);
   ssize_t status = HASHMAP_OK;
   while (index == HASHMAP_FULL) {
     if ((status = hashmap_rehash(map)) != HASHMAP_OK) {
       return status;
     }
-    index = hashmap_get_available_index(*map, key);
+    index = hashmap_get_available_index(map, key);
   }
 
-  if ((*map)->data[index].in_use) {
-    free((*map)->data[index].key);
-    free((*map)->data[index].value);
+  if (map->data[index].in_use) {
+    free(map->data[index].key);
+    free(map->data[index].value);
   } else {
-    (*map)->data[index].in_use = true;
-    (*map)->current_size++;
+    map->data[index].in_use = true;
+    map->current_size++;
   }
-  (*map)->data[index].key = strdup(key);
-  (*map)->data[index].value = strdup(value);
+  map->data[index].key = strdup(key);
+  map->data[index].value = strdup(value);
 
   return HASHMAP_OK;
 }
