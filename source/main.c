@@ -9,11 +9,12 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "http_request.h"
 
 #define PORT (8080)
 #define MAXEVENTS (1024)
 
-int make_socket_non_blocking(int fd) {
+ssize_t make_socket_non_blocking(int fd) {
   int flags = -1;
   flags = fcntl(fd, F_GETFL, 0);
   if (flags == -1) {
@@ -28,6 +29,7 @@ int make_socket_non_blocking(int fd) {
 
   return 0;
 }
+
 int openListenSocket(unsigned short port) {
   int fd = -1, optval = 1;
   struct sockaddr_in addr;
@@ -55,6 +57,7 @@ int openListenSocket(unsigned short port) {
 
   return fd;
 }
+
 int main(void) {
   int listen_fd = -1;
   listen_fd = openListenSocket(PORT);
@@ -96,7 +99,7 @@ int main(void) {
           }
 
           make_socket_non_blocking(infd);
-          event.data.fd = infd;
+          event.data.ptr = create_http_request(infd, epfd, "/home/dada/Code/");
           event.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
           epoll_ctl(epfd, EPOLL_CTL_ADD, infd, &event);
         }
