@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,10 +10,11 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "event.h"
+#include "http.h"
 #include "http_request.h"
 
 #define PORT (8080)
-#define MAXEVENTS (1024)
 
 ssize_t make_socket_non_blocking(int fd) {
   int flags = -1;
@@ -58,6 +60,57 @@ int openListenSocket(unsigned short port) {
   return fd;
 }
 
+static void handle_accept(int epollfd, int listen_fd) {
+  int infd = 0;
+  struct sockaddr_in client_addr;
+  memset(&client_addr, 0, sizeof(client_addr));
+  socklen_t inlen = 1;
+  /* we hava one or more incoming connections */
+  while (true) {
+    infd = accept(listen_fd, (struct sockaddr *)&client_addr, &inlen);
+    if (infd < 0) {
+      if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+        /* we have processed all incoming connections */
+        break;
+      } else {
+        break;
+      }
+    }
+
+    make_socket_non_blocking(infd);
+    add_event(epollfd, infd, EPOLLIN | EPOLLET | EPOLLONESHOT);
+  }
+}
+
+static void handle_events(int epollfd, int listen_fd, int event_num) {
+  http_request_t request = NULL;
+  event_t event = NULL;
+  for (size_t i = 0; i < event_num; i++) {
+    event = get_event(i);
+    request = (http_request_t)event->data.ptr;
+    if (listen_fd == request->fd) {
+      handle_accept(epollfd, listen_fd);
+    } else {
+      if ((event->events & EPOLLERR) || (event->events & EPOLLHUP) ||
+          (!(event->events & EPOLLIN))) {
+        close(request->fd);
+        continue;
+      }
+      do_request(request, create_http_response(request->fd));
+    }
+  }
+}
+
+static void do_epoll(int listen_fd) {
+  int epoll_fd = create_events();
+  add_event(epoll_fd, listen_fd, EPOLLIN | EPOLLET);
+  int event_num = -1;
+  while (true) {
+    event_num = wait_events(epoll_fd);
+    handle_events(epoll_fd, listen_fd, event_num);
+  }
+}
+
 int main(void) {
   int listen_fd = -1;
   listen_fd = openListenSocket(PORT);
@@ -67,52 +120,6 @@ int main(void) {
   if (make_socket_non_blocking(listen_fd) == -1) {
     return -1;
   }
-
-  int epfd = epoll_create1(0);
-  struct epoll_event events[MAXEVENTS];
-  memset(events, 0, sizeof(events));
-  struct epoll_event event;
-  memset(&event, 0, sizeof(event));
-  event.data.fd = listen_fd;
-  event.events = EPOLLIN | EPOLLET;
-  epoll_ctl(epfd, EPOLL_CTL_ADD, listen_fd, &event);
-
-  int n = -1, fd = -1, i = 0, infd = -1;
-  struct sockaddr_in client_addr;
-  memset(&client_addr, 0, sizeof(client_addr));
-  socklen_t inlen = 1;
-  while (1) {
-    n = epoll_wait(epfd, events, MAXEVENTS, -1);
-    for (i = 0; i < n; i++) {
-      fd = events[i].data.fd;
-      if (listen_fd == fd) {
-        /* we hava one or more incoming connections */
-        while (1) {
-          infd = accept(listen_fd, (struct sockaddr *)&client_addr, &inlen);
-          if (infd < 0) {
-            if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-              /* we have processed all incoming connections */
-              break;
-            } else {
-              break;
-            }
-          }
-
-          make_socket_non_blocking(infd);
-          event.data.ptr = create_http_request(infd, epfd, "/home/dada/Code/");
-          event.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
-          epoll_ctl(epfd, EPOLL_CTL_ADD, infd, &event);
-        }
-
-      } else {
-        if ((events[i].events & EPOLLERR) || (events[i].events & EPOLLHUP) ||
-            (!(events[i].events & EPOLLIN))) {
-          close(fd);
-          continue;
-        }
-      }
-    }
-  }
-
+  do_epoll(listen_fd);
   return 0;
 }

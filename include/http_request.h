@@ -28,7 +28,6 @@ extern "C" {
 
 typedef enum { UNKNOWN, GET, POST, HEAD, PUT, DELETE } HTTP_METHOD;
 typedef struct http_request {
-  void *root;
   int fd;
   int epfd;
   char buf[MAX_BUF]; /* ring buffer */
@@ -54,9 +53,10 @@ typedef struct http_request {
 } http_request;
 typedef http_request *http_request_t;
 
-extern http_request_t create_http_request(int fd, int epfd, void *root);
+extern http_request_t create_http_request(int fd, int epfd);
 extern ssize_t http_parse_request_line(http_request_t request);
 extern ssize_t http_parse_request_body(http_request_t request);
+extern ssize_t free_http_request(http_request_t request);
 
 #ifdef __cplusplus
 }

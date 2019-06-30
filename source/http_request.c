@@ -1,11 +1,12 @@
 #include "http_request.h"
+#include <ctype.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "util.h"
-http_request_t create_http_request(int fd, int epfd, void *root) {
+http_request_t create_http_request(int fd, int epfd) {
   http_request_t request = (http_request_t)malloc(sizeof(http_request));
   request->fd = fd;
   request->epfd = epfd;
-  request->root = root;
   return request;
 }
 
@@ -355,8 +356,16 @@ ssize_t http_parse_request_body(http_request_t request) {
           // save the current http header
           key = substring(request->cur_header_key_start,
                           request->cur_header_key_end);
+          char *p = key;
+          for (; *p; ++p) {
+            *p = tolower(*p);
+          }
           value = substring(request->cur_header_value_start,
                             request->cur_header_value_end);
+          p = value;
+          for (; *p; ++p) {
+            *p = tolower(*p);
+          }
           hashmap_put(request->headers, key, value);
           free(key);
           free(value);
@@ -396,5 +405,21 @@ done:
 
   request->state = sw_start;
 
+  return 0;
+}
+
+ssize_t free_http_request(http_request_t request) {
+  if (request->fd != -1) {
+    close(request->fd);
+    request->fd = -1;
+  }
+
+  if (request->headers) {
+    hashmap_free(request->headers);
+  }
+
+  if (request) {
+    free(request);
+  }
   return 0;
 }
