@@ -17,7 +17,6 @@ typedef struct hashmap {
 } hashmap;
 
 #define DEFAULT_MAX_SIZE (256)
-#define MAX_CHAIN_LENGTH (8)
 #define HASHMAP_FULL (-1)
 
 #define LOAD_FACTOR (0.75)
@@ -39,7 +38,7 @@ static ssize_t hashmap_get_available_index(hashmap_t map, const char* key) {
   }
   unsigned int index = BKDRHash(key) % map->max_size;
   hashmap_element_t element = NULL;
-  for (size_t i = 0; i < MAX_CHAIN_LENGTH; i++) {
+  for (size_t i = 0; i < map->max_size; i++) {
     element = &map->data[index];
     if (!element->in_use) {
       return index;
@@ -150,7 +149,7 @@ ssize_t hashmap_put(hashmap_t map, char* key, char* value) {
 ssize_t hashmap_get(hashmap_t map, char* key, char** value) {
   unsigned int index = BKDRHash(key) % map->max_size;
   hashmap_element_t element = NULL;
-  for (size_t i = 0; i < MAX_CHAIN_LENGTH; i++) {
+  for (size_t i = 0; i < map->max_size; i++) {
     element = &map->data[index];
     if (element->in_use && strcmp(element->key, key) == 0) {
       *value = element->value;
@@ -165,7 +164,7 @@ ssize_t hashmap_get(hashmap_t map, char* key, char** value) {
 ssize_t hashmap_remove(hashmap_t map, char* key) {
   unsigned int index = BKDRHash(key) % map->max_size;
   hashmap_element_t element = NULL;
-  for (size_t i = 0; i < MAX_CHAIN_LENGTH; i++) {
+  for (size_t i = 0; i < map->max_size; i++) {
     element = &map->data[index];
     if (element->in_use && strcmp(element->key, key) == 0) {
       hashmap_clear_element(element);
